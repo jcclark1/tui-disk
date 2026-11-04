@@ -61,6 +61,9 @@ type fstabForm struct {
 	// replace is the line number being edited, carried through from the seed
 	// so the renderer replaces that line instead of appending a duplicate.
 	replace int
+	// err is why the last submit was refused. It is drawn inside the dialog,
+	// because the status line is not on screen while the form is open.
+	err string
 }
 
 // newFstabForm builds the form, seeded from an entry or a device.
@@ -277,6 +280,9 @@ func (f fstabForm) view(t theme.Theme, width, height int) string {
 
 	if help := f.fields[f.active].help; help != "" {
 		lines = append(lines, "", t.Muted.Render(help))
+	}
+	if f.err != "" {
+		lines = append(lines, "", t.Danger.Render(f.err))
 	}
 	lines = append(lines, "",
 		t.Muted.Render("findmnt verifies the file before you are asked to confirm."))
