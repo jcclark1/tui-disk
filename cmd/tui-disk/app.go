@@ -432,6 +432,9 @@ func (a *app) handlePicker(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // handleForm routes keys to the fstab editor.
 func (a *app) handleForm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Any key after a refused submit is the user acting on the error: clear it
+	// so a stale message never sits under a form that has since changed.
+	a.form.err = ""
 	switch msg.String() {
 	case "esc":
 		a.mode = a.returnMode()
@@ -476,6 +479,7 @@ func (a *app) submitForm() tea.Cmd {
 	write, err := a.backend.BuildWriteFstab(ctx, a.form.spec())
 	if err != nil {
 		a.setStatus(ui.StatusError, err.Error())
+		a.form.err = strings.TrimPrefix(err.Error(), "storage: ")
 		return nil
 	}
 	a.mode = modeConfirm

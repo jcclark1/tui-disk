@@ -327,3 +327,33 @@ func TestCheckReport(t *testing.T) {
 		}
 	}
 }
+
+// TestFstabFormShowsWhyASubmitWasRefused guards the form against a silent
+// enter: the status line is not drawn while the form is open, so a refused
+// submit has to say why inside the dialog, and stop saying it once the user
+// starts fixing the field.
+func TestFstabFormShowsWhyASubmitWasRefused(t *testing.T) {
+	a := newDemoApp(t, 120, 40)
+	a.gotoSection(sectionMounts)
+	selectMount(t, a, "/media/backup")
+
+	press(a, "e")
+	if a.mode != modeForm {
+		t.Fatalf("mode = %v, want the form; status: %s", a.mode, a.status)
+	}
+	// The device field is first; a space makes it a spec no fstab can hold.
+	press(a, " x")
+	press(a, "enter")
+	if a.mode != modeForm {
+		t.Fatalf("mode = %v, want the form to stay open on a bad spec", a.mode)
+	}
+	if !strings.Contains(a.View(), "is not a device spec") {
+		t.Errorf("the form does not say why enter was refused:\n%s", a.View())
+	}
+	assertFits(t, a.View(), 120, 40, "the form with an error")
+
+	press(a, "tab")
+	if strings.Contains(a.View(), "is not a device spec") {
+		t.Errorf("the error outlived the next key:\n%s", a.View())
+	}
+}
